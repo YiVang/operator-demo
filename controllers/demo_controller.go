@@ -18,14 +18,15 @@ package controllers
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
+	demov1 "github.com/YiVang/operator-demo/api/v1"
+	v1 "github.com/YiVang/operator-demo/api/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	demov1 "github.com/YiVang/operator-demo/api/v1"
 )
 
 // DemoReconciler reconciles a Demo object
@@ -48,10 +49,37 @@ type DemoReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.1/pkg/reconcile
 func (r *DemoReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
+	log := log.FromContext(ctx)
 	// TODO(user): your logic here
-	fmt.Println("I am here")
+	log.Info("Receive change notify...")
+	inst := &v1.Demo{}
+	if err := r.Get(ctx, req.NamespacedName, inst); err != nil && !errors.IsNotFound(err) {
+		log.Error(err, "get demo inst failed")
+		return ctrl.Result{}, err
+	}
+	expectReplicas := inst.Spec.Replicas
+	realReplicas := 0
+	if inst.Spec.RealReplicas != nil {
+		realReplicas = *(inst.Spec.RealReplicas)
+	}
+
+	log.Info("Replicas ", "expect", strconv.Itoa(expectReplicas), "current", strconv.Itoa(realReplicas))
+
+	if expectReplicas == realReplicas {
+		log.Info("don't need change")
+		return ctrl.Result{}, nil
+	}
+	if expectReplicas > realReplicas {
+		log.Info("start scale out...")
+	} else {
+		log.Info("start scale in...")
+	}
+	inst.Spec.RealReplicas = &expectReplicas
+	// 使用update方法似乎会导致循环触发Reconcile函数调用
+	if err := r.Update(ctx, inst); err != nil {
+		log.Error(err, "update inst info failed")
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 

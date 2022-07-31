@@ -29,7 +29,8 @@ type DemoSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Demo. Edit demo_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Replicas     int  `json:"replicas,omitempty"`
+	RealReplicas *int `json:"real_replicas,omitempty"`
 }
 
 // DemoStatus defines the observed state of Demo
