@@ -1,0 +1,6 @@
+apiVersion: demo.github.com/v1
+kind: Demo
+metadata:
+  name: demo-sample
+spec:
+  # TODO(user): Add fields here

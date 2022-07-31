@@ -1,0 +1,16 @@
+domain: github.com
+layout:
+- go.kubebuilder.io/v3
+projectName: operator-demo
+repo: github.com/YiVang/operator-demo
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: github.com
+  group: demo
+  kind: Demo
+  path: github.com/YiVang/operator-demo/api/v1
+  version: v1
+version: "3"
